@@ -1,4 +1,4 @@
-import { useLazyQuery, useQuery } from '@apollo/client';
+import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
 import {
   Button,
   Input,
@@ -12,33 +12,68 @@ import {
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import UserOperations from '@/graphql/operations/user';
-import { SearchedUser, SearchUsersData, SearchUsersInput } from '@/util/types';
+import {
+  CreateConversationData,
+  CreateConversationInput,
+  SearchedUser,
+  SearchUsersData,
+  SearchUsersInput,
+} from '@/util/types';
 import UserSearchList from './UserSearchList';
 import Participants from './Participants';
+import { toast } from 'react-hot-toast';
+import ConversationOperations from '@/graphql/operations/conversation';
+import { Session } from 'next-auth';
 
 interface ConversationsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  session: Session | null;
 }
 
 const ConversationsModal: React.FC<ConversationsModalProps> = ({
   isOpen,
   onClose,
+  session,
 }) => {
   const [username, setUsername] = useState('');
   const [participants, setParticipants] = useState<Array<SearchedUser>>([]);
 
   // useLazyQuery instead of useQuery to not execute the query when the component renders
-  const [searchUsers, { data, error, loading }] = useLazyQuery<
-    SearchUsersData,
-    SearchUsersInput
-  >(UserOperations.Queries.searchUsers);
+  const [searchUsers, { data, error, loading: searchedUsersloading }] =
+    useLazyQuery<SearchUsersData, SearchUsersInput>(
+      UserOperations.Queries.searchUsers
+    );
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // searchUsers doesn't have be explicitly set as async
     // useLazyQuery handles the Promise for us
     searchUsers({ variables: { username } });
+  };
+
+  const [createConversation, { loading: createConversationLoading }] =
+    useMutation<CreateConversationData, CreateConversationInput>(
+      ConversationOperations.Mutations.createConversation
+    );
+
+  const onCreateConversation = async () => {
+    if (!session?.user.id) return;
+    const participantIds = [
+      session.user.id,
+      ...participants.map((participant) => participant.id),
+    ];
+
+    try {
+      const { data } = await createConversation({
+        variables: { participantIds },
+      });
+
+      console.log('onCreateConvo Data', data);
+    } catch (error: any) {
+      console.error('onCreateConversation', error);
+      toast.error(error?.message);
+    }
   };
 
   const addParticipant = (user: SearchedUser) => {
@@ -61,7 +96,7 @@ const ConversationsModal: React.FC<ConversationsModalProps> = ({
           <ModalHeader>Create a conversation</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <form onSubmit={onSubmit}>
+            <form onSubmit={onSearch}>
               <Stack spacing={4}>
                 <Input
                   placeholder="Enter a username"
@@ -71,7 +106,7 @@ const ConversationsModal: React.FC<ConversationsModalProps> = ({
                 <Button
                   type="submit"
                   isDisabled={!username}
-                  isLoading={loading}
+                  isLoading={searchedUsersloading}
                 >
                   Search
                 </Button>
@@ -84,10 +119,23 @@ const ConversationsModal: React.FC<ConversationsModalProps> = ({
               />
             )}
             {participants.length !== 0 && (
-              <Participants
-                participants={participants}
-                removeParticipants={removeParticipant}
-              />
+              <>
+                <Participants
+                  participants={participants}
+                  removeParticipants={removeParticipant}
+                />
+                <Button
+                  bg="brand.100"
+                  width="100%"
+                  mt={6}
+                  _hover={{ bg: 'brand.100' }}
+                  color="#FFFFFF"
+                  onClick={onCreateConversation}
+                  isLoading={createConversationLoading}
+                >
+                  Create conversation
+                </Button>
+              </>
             )}
           </ModalBody>
         </ModalContent>
