@@ -1,3 +1,4 @@
+// USER TYPES
 // Typescript interfaces for GraphQL mutation return type
 export interface CreateUsernameData {
   createUsername: {
@@ -22,4 +23,15 @@ export interface SearchUsersInput {
 export interface SearchedUser {
   id: string;
   username: string;
+}
+
+// CONVERSATION TYPES
+export interface CreateConversationData {
+  createConversation: {
+    conversationId: string;
+  };
+}
+
+export interface CreateConversationInput {
+  participantIds: Array<string>;
 }
