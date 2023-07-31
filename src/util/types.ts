@@ -1,5 +1,8 @@
 // USER TYPES
 // Typescript interfaces for GraphQL mutation return type
+import { conversationPopulated } from '../../../server/src/graphql/resolvers/conversation';
+import { ConversationPopulated } from '../../../server/src/util/types';
+
 export interface CreateUsernameData {
   createUsername: {
     success: boolean;
@@ -26,6 +29,13 @@ export interface SearchedUser {
 }
 
 // CONVERSATION TYPES
+
+export interface ConversationsData {
+  conversations: Array<ConversationPopulated>;
+}
+
+export type ConversationPopulatedFE = typeof conversationPopulated;
+
 export interface CreateConversationData {
   createConversation: {
     conversationId: string;

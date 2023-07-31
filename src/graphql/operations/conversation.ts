@@ -1,7 +1,36 @@
 import { gql } from '@apollo/client';
 
+const ConversationFields = `
+    conversations {
+      id
+      updatedAt
+      latestMessage {
+        id
+        body
+        createdAt
+        sender {
+          id
+          username
+        }
+      }
+      participants {
+        user {
+          id
+          username
+        }
+        hasSeenLatestMessage
+      }
+    }
+  `;
+
 const UserOperations = {
-  Queries: {},
+  Queries: {
+    conversations: gql`
+      query Conversations {
+        ${ConversationFields}
+      }
+    `,
+  },
   Mutations: {
     createConversation: gql`
       mutation CreateConversation($participantIds: [String]!) {
