@@ -2,12 +2,12 @@ import { Box, Text } from '@chakra-ui/react';
 import { Session } from 'next-auth';
 import { useState } from 'react';
 import ConversationsModal from './Modal';
-import { ConversationPopulatedFE } from '@/util/types';
+import { ConversationPopulated } from '@/util/types';
 import ConversationItem from './Item';
 
 interface ConversationListProps {
   session: Session | null;
-  conversations: Array<ConversationPopulatedFE>;
+  conversations: Array<ConversationPopulated>;
 }
 
 const ConversationList: React.FC<ConversationListProps> = ({
