@@ -1,7 +1,6 @@
 import { gql } from '@apollo/client';
 
 const ConversationFields = `
-    conversations {
       id
       updatedAt
       latestMessage {
@@ -20,28 +19,51 @@ const ConversationFields = `
         }
         hasSeenLatestMessage
       }
-    }
   `;
 
-const UserOperations = {
+// Structure:
+// query string name
+
+const ConversationOperations = {
   Queries: {
+    // Name of query string similar to the backend resolver
     conversations: gql`
+    # Name of Query
       query Conversations {
-        ${ConversationFields}
+        # Backend resolver name and params
+        conversations {
+          # Return type
+          ${ConversationFields}
+        }
       }
     `,
   },
   Mutations: {
+    // Name of query string
     createConversation: gql`
+      # Name of Mutation
       mutation CreateConversation($participantIds: [String]!) {
-        # must be similar to the backend resolver name and params
+        # Backend resolver name and params
         createConversation(participantIds: $participantIds) {
+          # Return type
           conversationId
         }
       }
     `,
   },
-  Subscriptions: {},
+  Subscriptions: {
+    // Name of query string
+    conversationCreated: gql`
+    # Name of subscription
+      subscription ConversationCreated {
+        # Backend resolver
+        conversationCreated { 
+          # Return type
+          ${ConversationFields}
+        }
+      }
+    `,
+  },
 };
 
-export default UserOperations;
+export default ConversationOperations;
