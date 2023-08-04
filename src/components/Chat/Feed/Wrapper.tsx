@@ -26,7 +26,7 @@ const FeedWrapper: React.FC<FeedWrapperProps> = ({ session }) => {
           overflow="hidden"
           flexGrow={1}
         >
-          <MessagesHeader userId={!userId} conversationId={conversationId} />
+          <MessagesHeader userId={userId!} conversationId={conversationId} />
           {/* <Messages /> */}
         </Flex>
       ) : (
