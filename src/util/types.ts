@@ -1,7 +1,13 @@
 // USER TYPES
 // Typescript interfaces for GraphQL mutation return type
-import { ConversationPopulated as ConversationPopulatedBE } from '../../../server/src/util/types';
+import {
+  ConversationPopulated as ConversationPopulatedBE,
+  MessagePopulated as MessagePopulatedBE,
+  SendMessageArguments as SendMessageArgumentsBE,
+} from '../../../server/src/util/types';
 import { ParticipantPopulated as ParticipantPopulatedBE } from '../../../server/src/util/types';
+
+// USER TYPES
 
 export interface CreateUsernameData {
   createUsername: {
@@ -10,7 +16,6 @@ export interface CreateUsernameData {
   };
 }
 
-// Typescript interfaces for GraphQL mutation paramter variable type
 export interface CreateUsernameVariables {
   username: string;
 }
@@ -35,7 +40,6 @@ export interface ConversationsData {
 }
 
 export type ConversationPopulated = ConversationPopulatedBE;
-
 export type ParticipantPopulated = ParticipantPopulatedBE;
 
 export interface CreateConversationData {
@@ -46,4 +50,32 @@ export interface CreateConversationData {
 
 export interface CreateConversationInput {
   participantIds: Array<string>;
+}
+
+// MESSAGE TYPES
+export type MessagePopulated = MessagePopulatedBE;
+
+export interface MessagesData {
+  messages: Array<MessagePopulated>;
+}
+
+export interface MessagesVariables {
+  conversationId: string;
+}
+
+export interface ConversationCreatedSubscriptionData {
+  subscriptionData: {
+    data: { conversationCreated: ConversationPopulated };
+  };
+}
+
+export type SendMessageArguments = SendMessageArgumentsBE;
+
+export interface MessageSubscriptionData {
+  subscriptionData: {
+    data: {
+      // name of subscription
+      messageSent: MessagePopulated;
+    };
+  };
 }
