@@ -1,11 +1,17 @@
 import { Box } from '@chakra-ui/react';
 import { Session } from 'next-auth';
 import ConversationList from './List';
-import { useQuery } from '@apollo/client';
+import { gql, useMutation, useQuery } from '@apollo/client';
 import ConversationOperations from '../../../graphql/operations/conversation';
-import { ConversationPopulated, ConversationsData } from '@/util/types';
+import {
+  ConversationCreatedSubscriptionData,
+  ConversationPopulated,
+  ConversationsData,
+  ParticipantPopulated,
+} from '@/util/types';
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
+import SkeletonLoader from '@/components/common/SkeletonLoader';
 
 interface ConversationsWrapperProps {
   session: Session | null;
@@ -14,6 +20,11 @@ interface ConversationsWrapperProps {
 const ConversationsWrapper: React.FC<ConversationsWrapperProps> = ({
   session,
 }) => {
+  const router = useRouter();
+  const { conversationId } = router.query;
+
+  const userId = session?.user.id;
+
   const {
     data: conversationsData,
     error: conversationsError,
@@ -21,14 +32,76 @@ const ConversationsWrapper: React.FC<ConversationsWrapperProps> = ({
     subscribeToMore,
   } = useQuery<ConversationsData>(ConversationOperations.Queries.conversations);
 
-  const router = useRouter();
+  const [markConversationAsRead] = useMutation<
+    { markConversationAsRead: boolean },
+    { userId?: string; conversationId: string }
+  >(ConversationOperations.Mutations.markConversationAsRead);
 
-  const { conversationId } = router.query;
-
-  const onViewConversation = async (conversationId: string) => {
-    // Push the conversationId to the router query params
+  const onViewConversation = async (
+    conversationId: string,
+    hasSeenLatestMessage?: boolean
+  ) => {
+    // Pushing the conversationId to the router query params
     router.push({ query: { conversationId } });
-    // Mark the conversation as read
+    // Marking the conversation as read
+    if (hasSeenLatestMessage) return;
+
+    // markConversation mutation
+    try {
+      await markConversationAsRead({
+        variables: { userId, conversationId },
+        optimisticResponse: { markConversationAsRead: true },
+        update: (cache) => {
+          // Get Conversation Participants from Cache
+          const participantsFragment = cache.readFragment<{
+            participants: Array<ParticipantPopulated>;
+          }>({
+            id: `Conversation:${conversationId}`,
+            fragment: gql`
+              fragment Participants on Conversation {
+                participants {
+                  user {
+                    id
+                    username
+                  }
+                  hasSeenLatestMessage
+                }
+              }
+            `,
+          });
+
+          if (!participantsFragment) return;
+
+          const participants = [...participantsFragment.participants];
+
+          const userParticipantIndex = participants.findIndex(
+            (p) => p.user.id === userId
+          );
+
+          if (userParticipantIndex === -1) return;
+
+          const userParticipant = participants[userParticipantIndex];
+
+          participants[userParticipantIndex] = {
+            ...userParticipant,
+            hasSeenLatestMessage: true,
+          };
+
+          // Update cache
+          cache.writeFragment({
+            id: `Conversation:${conversationId}`,
+            fragment: gql`
+              fragment UpdatedParticipant on Conversation {
+                participants
+              }
+            `,
+            data: { participants },
+          });
+        },
+      });
+    } catch (error) {
+      console.log('onViewConversation error', error);
+    }
   };
 
   const subscribeToNewConversations = () => {
@@ -37,13 +110,7 @@ const ConversationsWrapper: React.FC<ConversationsWrapperProps> = ({
       // Whatever is returned from updateQuery will be our new data
       updateQuery: (
         prev,
-        {
-          subscriptionData,
-        }: {
-          subscriptionData: {
-            data: { conversationCreated: ConversationPopulated };
-          };
-        }
+        { subscriptionData }: ConversationCreatedSubscriptionData
       ) => {
         // If no new data, just return prev data
         if (!subscriptionData.data) return prev;
@@ -52,17 +119,18 @@ const ConversationsWrapper: React.FC<ConversationsWrapperProps> = ({
 
         let flag = false;
 
-        prev?.conversations.every((conversation) => {
+        prev.conversations.every((conversation) => {
           if (conversation.id === newConversation.id) {
             flag = true;
           }
           return !flag;
         });
 
-        if (flag) return;
+        if (flag) return prev;
+
         // Prepend new data
         return Object.assign({}, prev, {
-          conversations: [newConversation, ...prev?.conversations],
+          conversations: [newConversation, ...prev.conversations],
         });
       },
     });
@@ -80,13 +148,18 @@ const ConversationsWrapper: React.FC<ConversationsWrapperProps> = ({
       bg="blackAlpha.50"
       py={6}
       px={3}
+      flexDirection="column"
+      gap={4}
     >
-      {/* Skeleton Loader */}
-      <ConversationList
-        session={session}
-        conversations={conversationsData?.conversations || []}
-        onViewConversation={onViewConversation}
-      />
+      {conversationsLoading ? (
+        <SkeletonLoader count={7} height="80px" width="100" />
+      ) : (
+        <ConversationList
+          session={session}
+          conversations={conversationsData?.conversations || []}
+          onViewConversation={onViewConversation}
+        />
+      )}
     </Box>
   );
 };

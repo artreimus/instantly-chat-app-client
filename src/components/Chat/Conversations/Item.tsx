@@ -13,13 +13,10 @@ import { useState } from 'react';
 import { MdDeleteOutline } from 'react-icons/md';
 import { BiLogOut } from 'react-icons/bi';
 import { AiOutlineEdit } from 'react-icons/ai';
+import { BsDot } from 'react-icons/bs';
 import { formatUsernames } from '@/util/functions';
 import { formatRelative } from 'date-fns';
 import enUS from 'date-fns/locale/en-US';
-
-interface ConversationItemProps {
-  conversation: ConversationPopulated;
-}
 
 const formatRelativeLocale = {
   lastWeek: 'eeee',
@@ -29,12 +26,12 @@ const formatRelativeLocale = {
 };
 
 interface ConversationItemProps {
-  userId: string;
+  userId?: string;
   conversation: ConversationPopulated;
   onClick: () => void;
   isSelected: boolean;
+  hasSeenLatestMessage?: boolean;
   //   onEditConversation?: () => void;
-  //   hasSeenLatestMessage?: boolean;
   //   selectedConversationId?: string;
   //   onDeleteConversation?: (conversationId: string) => void;
   //   onLeaveConversation?: (conversation: ConversationPopulated) => void;
@@ -45,8 +42,8 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
   conversation,
   onClick,
   isSelected,
+  hasSeenLatestMessage,
   //   selectedConversationId,
-  //   hasSeenLatestMessage,
   //   onEditConversation,
   //   onDeleteConversation,
   //   onLeaveConversation,
@@ -61,6 +58,8 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
       setMenuOpen(true);
     }
   };
+
+  console.log('hasSeenLatestMessage', hasSeenLatestMessage);
 
   return (
     <Stack
@@ -110,11 +109,11 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
           )}
         </MenuList>
       </Menu>
-      {/* <Flex position="absolute" left="-6px">
+      <Flex position="absolute" left="-6px">
         {hasSeenLatestMessage === false && (
-          <GoPrimitiveDot fontSize={18} color="#6B46C1" />
+          <BsDot fontSize={30} color="#6B46C1" />
         )}
-      </Flex> */}
+      </Flex>
       <Avatar />
       <Flex justify="space-between" width="80%" height="100%">
         <Flex direction="column" width="70%" height="100%">
@@ -124,7 +123,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
             overflow="hidden"
             textOverflow="ellipsis"
           >
-            {formatUsernames(conversation.participants, userId)}
+            {formatUsernames(conversation.participants, userId!)}
           </Text>
           {conversation.latestMessage && (
             <Box width="140%">

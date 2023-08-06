@@ -1,16 +1,11 @@
 import { gql } from '@apollo/client';
+import { MessageFields } from './message';
 
 const ConversationFields = `
       id
       updatedAt
       latestMessage {
-        id
-        body
-        createdAt
-        sender {
-          id
-          username
-        }
+        ${MessageFields}
       }
       participants {
         user {
@@ -39,7 +34,7 @@ const ConversationOperations = {
     `,
   },
   Mutations: {
-    // Name of query string
+    // Name of mutation string
     createConversation: gql`
       # Name of Mutation
       mutation CreateConversation($participantIds: [String]!) {
@@ -50,9 +45,17 @@ const ConversationOperations = {
         }
       }
     `,
+    markConversationAsRead: gql`
+      mutation MarkConversationAsRead(
+        $userId: String!
+        $conversationId: String!
+      ) {
+        markConversationAsRead(userId: $userId, conversationId: $conversationId)
+      }
+    `,
   },
   Subscriptions: {
-    // Name of query string
+    // Name of subscription string
     conversationCreated: gql`
     # Name of subscription
       subscription ConversationCreated {
