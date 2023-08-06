@@ -2,7 +2,7 @@ import { ParticipantPopulated } from './types';
 
 export const formatUsernames = (
   participants: Array<ParticipantPopulated>,
-  myUserId: string
+  myUserId?: string
 ): string => {
   const usernames = participants
     .filter((participant) => participant.user.id != myUserId)

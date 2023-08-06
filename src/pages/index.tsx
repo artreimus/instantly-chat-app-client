@@ -9,12 +9,9 @@ export default function Home() {
   const { data: session } = useSession();
 
   const reloadSession = () => {
-    console.log('Reloading');
     const event = new Event('visibilitychange');
     document.dispatchEvent(event);
   };
-
-  console.log('session', session);
 
   return (
     <>
