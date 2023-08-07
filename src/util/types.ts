@@ -52,6 +52,18 @@ export interface CreateConversationInput {
   participantIds: Array<string>;
 }
 
+export interface ConversationUpdatedData {
+  conversationUpdated: {
+    conversation: ConversationPopulated;
+  };
+}
+
+export interface ConversationDeletedData {
+  conversationDeleted: {
+    id: string;
+  };
+}
+
 // MESSAGE TYPES
 export type MessagePopulated = MessagePopulatedBE;
 

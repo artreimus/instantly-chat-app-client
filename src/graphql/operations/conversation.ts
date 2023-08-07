@@ -45,6 +45,14 @@ const ConversationOperations = {
         }
       }
     `,
+    // Name of mutation string
+    deleteConversation: gql`
+      # Name of Mutation
+      mutation DeleteConversation($conversationId: String!) {
+        # Backend resolver name and params
+        deleteConversation(conversationId: $conversationId)
+      }
+    `,
     markConversationAsRead: gql`
       mutation MarkConversationAsRead(
         $userId: String!
@@ -63,6 +71,30 @@ const ConversationOperations = {
         conversationCreated { 
           # Return type
           ${ConversationFields}
+        }
+      }
+    `,
+    // Name of subscription string
+    conversationUpdated: gql`
+    # Name of subscription
+      subscription ConversationUpdated {
+        # Backend resolver
+        conversationUpdated { 
+          # Return type
+          conversation {
+          ${ConversationFields}
+          }
+        }
+      }
+    `,
+    // Name of subscription string
+    conversationDeleted: gql`
+      # Name of subscription
+      subscription ConversationDeleted {
+        # Backend resolver
+        conversationDeleted {
+          # Return type
+          id
         }
       }
     `,
